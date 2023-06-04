@@ -6,43 +6,40 @@ import Button from "./Button/Button";
 import Modal from "./Modal/Modal";
 import css from "./App.module.css";
 import { ToastContainer, toast, Flip } from 'react-toastify';
-import fetchImages from 'services/fetchImages.js';
 import 'react-toastify/dist/ReactToastify.css';
+import PostsApiService from 'services/PostsApiService';
 
+const postApiService = new PostsApiService();
 
 class App extends Component {
   state = {
     images: [],
-    isLoading: false,
+    loading: false,
     error: null,
-    query: '',
+    searchQuery: '',
     page: 1,
     showModal: false,
     selectedImage: null,
     isLastPage: false,
+    isButtonShow: false,
   };
 
-  componentDidUpdate(_prevProps, prevState) {
-    if (prevState.query !== this.state.query) {
-      this.setState({ images: [], page: 1, isLastPage: false }, () => {
-            fetchImages()
-              this.setState(prevState => ({
-                images: [...prevState.images, ...modifiedHits],
-                page: prevState.page + 1,
-                isLastPage: prevState.images.length + modifiedHits.length >= totalHits,
-              }));
-            })
-            .catch(error => {
-              this.setState({ error: error.message });
-            })
-            .finally(() => {
-              this.setState({ isLoading: false });
-            });
-      };
+  componentDidUpdate(_prevProps, prevState) { 
+    const prevQuery = prevState.searchQuery;
+    const nextQuery = this.state.searchQuery;
+    const prevPage = prevState.page;
+    const nextPage = this.state.page;
+
+    if (prevQuery !== nextQuery) {
+      this.setState({ page: 1, images: [], isButtonShow: false });
+      if (nextPage === 1) {
+        this.fetchGalleryItems(nextQuery, nextPage);
+      }
+    } else if (prevPage !== nextPage) {
+      this.fetchGalleryItems(nextQuery, nextPage);
     }
   }
 
-  // fetchImages = () => {
   //   const { query, page } = this.state;
   //   const API_KEY = '35466076-08e8024219c108266a372e8b8';
 
@@ -80,11 +77,58 @@ class App extends Component {
   //     });
   // };
 
-  handleSubmit = query => {
-    if (this.state.query === query) {
+  fetchGalleryItems = (nextQuery, nextPage) => {
+    this.setState({ loading: true, error: false });
+
+    postApiService.query = nextQuery;
+    postApiService.page = nextPage;
+
+    postApiService.fetchPost().then(data => {
+      postApiService.hits = data.totalHits;
+
+      const newData = data.hits.map(
+        ({ id, tags, webformatURL, largeImageURL }) => ({
+          id,
+          tags,
+          webformatURL,
+          largeImageURL,
+        })
+      );
+      const currentData = [...this.state.images, ...newData];
+
+      this.setState(prevState => ({
+        images: [...prevState.images, ...newData],
+      }));
+
+      if (!data.totalHits) {
+        this.setState({ loading: false, error: true });
+        return toast.warn(
+          'Sorry, there are no images matching your search query. Please try again.'
+        );
+      }
+
+      if (currentData.length >= data.totalHits) {
+        this.setState({
+          loading: false,
+          isButtonShow: false,
+          error: false,
+        });
+        return;
+      }
+
+      this.setState({
+        loading: false,
+        isButtonShow: true,
+        error: false,
+      });
+    });
+  };
+
+  handleSubmit = searchQuery => {
+    if (this.state.searchQuery === searchQuery) {
       return;
     }
-    this.setState({ query: query, page: 1, images: [], error: null, isLastPage: false });
+    this.setState({ searchQuery: searchQuery, page: 1, images: [], error: null, isLastPage: false });
   };
 
   handleImageClick = image => {
@@ -98,7 +142,7 @@ class App extends Component {
   };
 
   render() {
-    const { images, isLoading, error, showModal, selectedImage, isLastPage } = this.state;
+    const { images, loading, error, showModal, selectedImage, isLastPage } = this.state;
 
     return (
       <div className={css.App}>
@@ -109,11 +153,11 @@ class App extends Component {
 
         <ImageGallery images={images} onItemClick={this.handleImageClick} />
 
-        {isLoading && <Loader />}
+        {loading && <Loader />}
 
 
-        {!isLoading && images.length > 0 && !isLastPage && (
-          <Button onClick={this.fetchImages} />
+        {!loading && images.length > 0 && !isLastPage && (
+          <Button onClick={this.fetchGalleryItems} />
         )}
 
         {showModal && (
@@ -122,5 +166,6 @@ class App extends Component {
       </div>
     )
   }
-    
+}
+
 export default App

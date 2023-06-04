@@ -4,19 +4,19 @@ import css from './Searchbar.module.css'
 
 class Searchbar extends Component {
     state = {
-        query: "",
+        searchQuery: "",
     };
 
     handleChange = event => {
-        this.setState({query: event.target.value})
+        this.setState({searchQuery: event.target.value})
     }
 
     handleSubmit = (e) => {
         e.preventDefault()
-        if (!this.state.query.trim()) { 
+        if (!this.state.searchQuery.trim()) { 
             return
           }
-          this.props.onSubmit(this.state.query);
+          this.props.onSubmit(this.state.searchQuery);
     }
 
     render(){
