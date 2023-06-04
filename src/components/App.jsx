@@ -7,9 +7,8 @@ import Modal from "./Modal/Modal";
 import css from "./App.module.css";
 import { ToastContainer, toast, Flip } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import PostsApiService from 'services/PostsApiService';
+import {getImages} from 'services/getImages';
 
-const postApiService = new PostsApiService();
 
 class App extends Component {
   state = {
@@ -24,7 +23,7 @@ class App extends Component {
     isButtonShow: false,
   };
 
-  componentDidUpdate(_prevProps, prevState) { 
+  componentDidUpdate(_prevProps, prevState) {
     const prevQuery = prevState.searchQuery;
     const nextQuery = this.state.searchQuery;
     const prevPage = prevState.page;
@@ -42,48 +41,41 @@ class App extends Component {
 
   fetchGalleryItems = (nextQuery, nextPage) => {
     this.setState({ loading: true, error: false });
+    const { hits, totalHits } = getImages(nextQuery, nextPage);
 
-    postApiService.query = nextQuery;
-    postApiService.page = nextPage;
+    const newData = hits.map(
+      ({ id, tags, webformatURL, largeImageURL }) => ({
+        id,
+        tags,
+        webformatURL,
+        largeImageURL,
+      })
+    );
+    const currentData = [...this.state.images, ...newData];
 
-    postApiService.fetchPost().then(data => {
-      postApiService.hits = data.totalHits;
+    this.setState(prevState => ({
+      images: [...prevState.images, ...newData],
+    }));
 
-      const newData = data.hits.map(
-        ({ id, tags, webformatURL, largeImageURL }) => ({
-          id,
-          tags,
-          webformatURL,
-          largeImageURL,
-        })
+    if (!totalHits) {
+      this.setState({ loading: false, error: true });
+      return toast.warn(
+        'Sorry, there are no images matching your search query. Please try again.'
       );
-      const currentData = [...this.state.images, ...newData];
-
-      this.setState(prevState => ({
-        images: [...prevState.images, ...newData],
-      }));
-
-      if (!data.totalHits) {
-        this.setState({ loading: false, error: true });
-        return toast.warn(
-          'Sorry, there are no images matching your search query. Please try again.'
-        );
-      }
-
-      if (currentData.length >= data.totalHits) {
-        this.setState({
-          loading: false,
-          isButtonShow: false,
-          error: false,
-        });
-        return;
-      }
-
+    }
+    if (currentData.length >= totalHits) {
       this.setState({
         loading: false,
-        isButtonShow: true,
+        isButtonShow: false,
         error: false,
       });
+      return;
+    }
+
+    this.setState({
+      loading: false,
+      isButtonShow: true,
+      error: false,
     });
   };
 
@@ -129,6 +121,7 @@ class App extends Component {
       </div>
     )
   }
-}
+};
+
 
 export default App
