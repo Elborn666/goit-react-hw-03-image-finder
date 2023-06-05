@@ -39,7 +39,7 @@ class App extends Component {
     }
   }
 
-  async function fetchGalleryItems (nextQuery, nextPage) {
+  async fetchGalleryItems (nextQuery, nextPage) {
     this.setState({ loading: true, error: false });
     const { hits, totalHits } = await getImages(nextQuery, nextPage);
 
