@@ -39,9 +39,9 @@ class App extends Component {
     }
   }
 
-  fetchGalleryItems = (nextQuery, nextPage) => {
+  async function fetchGalleryItems (nextQuery, nextPage) {
     this.setState({ loading: true, error: false });
-    const { hits, totalHits } = getImages(nextQuery, nextPage);
+    const { hits, totalHits } = await getImages(nextQuery, nextPage);
 
     const newData = hits.map(
       ({ id, tags, webformatURL, largeImageURL }) => ({
