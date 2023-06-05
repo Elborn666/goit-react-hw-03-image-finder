@@ -78,7 +78,7 @@ class App extends Component {
       error: false,
     });
   };
-
+  
   handleSubmit = searchQuery => {
     if (this.state.searchQuery === searchQuery) {
       return;
@@ -94,6 +94,12 @@ class App extends Component {
   handleModalClose = () => {
     this.setState({ selectedImage: null, showModal: false });
     document.body.style.overflow = 'auto';
+  };
+
+  onLoadMore = () => {
+    this.setState(prevState => ({
+      page: prevState.page + 1,
+    }));
   };
 
   render() {
@@ -112,7 +118,7 @@ class App extends Component {
 
 
         {!isLoading && images.length > 0 && !isLastPage && (
-          <Button onClick={this.fetchGalleryItems} />
+          <Button onClick={this.onLoadMore} />
         )}
 
         {showModal && (
