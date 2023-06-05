@@ -13,7 +13,7 @@ import {getImages} from 'services/getImages';
 class App extends Component {
   state = {
     images: [],
-    loading: false,
+    isLoading: false,
     error: null,
     searchQuery: '',
     page: 1,
@@ -40,7 +40,7 @@ class App extends Component {
   }
 
   async fetchGalleryItems (nextQuery, nextPage) {
-    this.setState({ loading: true, error: false });
+    this.setState({ isLoading: true, error: false });
     const { hits, totalHits } = await getImages(nextQuery, nextPage);
 
     const newData = hits.map(
@@ -58,14 +58,14 @@ class App extends Component {
     }));
 
     if (!totalHits) {
-      this.setState({ loading: false, error: true });
+      this.setState({ isLoading: false, error: true });
       return toast.warn(
         'Sorry, there are no images matching your search query. Please try again.'
       );
     }
     if (currentData.length >= totalHits) {
       this.setState({
-        loading: false,
+        isLoading: false,
         isButtonShow: false,
         error: false,
       });
@@ -73,7 +73,7 @@ class App extends Component {
     }
 
     this.setState({
-      loading: false,
+      isLoading: false,
       isButtonShow: true,
       error: false,
     });
@@ -97,7 +97,7 @@ class App extends Component {
   };
 
   render() {
-    const { images, loading, error, showModal, selectedImage, isLastPage } = this.state;
+    const { images, isLoading, error, showModal, selectedImage, isLastPage } = this.state;
 
     return (
       <div className={css.App}>
@@ -108,10 +108,10 @@ class App extends Component {
 
         <ImageGallery images={images} onItemClick={this.handleImageClick} />
 
-        {loading && <Loader />}
+        {isLoading && <Loader />}
 
 
-        {!loading && images.length > 0 && !isLastPage && (
+        {!isLoading && images.length > 0 && !isLastPage && (
           <Button onClick={this.fetchGalleryItems} />
         )}
 
