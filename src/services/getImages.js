@@ -4,7 +4,7 @@ const BASE_URL = 'https://pixabay.com/api/';
 const API_KEY = '35466076-08e8024219c108266a372e8b8';
 
 
-export const getImages = (searchQuery, page) => {
+export async function getImages (searchQuery, page) {
   const OPTIONS = new URLSearchParams({
     key: API_KEY,
     q: searchQuery,
@@ -16,7 +16,7 @@ export const getImages = (searchQuery, page) => {
   });
 
   try {
-    const response = axios.get(`${BASE_URL}?${OPTIONS.toString()}`);
+    const response = await axios.get(`${BASE_URL}?${OPTIONS.toString()}`);
     return response.data;
   } catch (error) {
     console.error(error.toJSON());
